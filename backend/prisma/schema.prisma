@@ -1,0 +1,277 @@
+ 
+ 
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+ 
+model School {
+  id                   String   @id @default(uuid()) @map("school_id")
+  schoolName           String   @map("school_name")
+  schoolCode           String   @unique @map("school_code")
+  district             String?
+  state                String?
+  pincode              String?
+  internetAvailability String?  @map("internet_availability")  
+  totalStudents        Int      @default(0) @map("total_students")
+  totalTeachers        Int      @default(0) @map("total_teachers")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  users User[]
+
+  @@index([schoolCode])
+  @@map("schools")
+}
+
+ 
+model User {
+  id                 String    @id @default(uuid()) @map("user_id")
+  email              String    @unique
+  passwordHash       String    @map("password_hash")
+  role               Role
+  fullName           String    @map("full_name")
+  phone              String?
+  languagePreference String    @default("en") @map("language_preference")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  lastLoginAt        DateTime? @map("last_login_at")
+  isActive           Boolean   @default(true) @map("is_active")
+  schoolId           String?   @map("school_id")
+
+  school        School?        @relation(fields: [schoolId], references: [id])
+  refreshTokens RefreshToken[]
+  
+   
+  studentsAsTeacher   Student[] @relation("TeacherStudents")
+   
+  studentsAsTherapist Student[] @relation("TherapistStudents")
+   
+  studentParents      StudentParent[]
+
+  @@index([email])
+  @@index([role])
+  @@index([schoolId])
+  @@map("users")
+}
+
+ 
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  revoked   Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+ 
+enum Role {
+  student
+  teacher
+  therapist
+  parent
+  admin
+}
+
+ 
+enum ScreeningStatus {
+  pending
+  completed
+  reviewed
+}
+
+ 
+model Student {
+  id                  String          @id @default(uuid()) @map("student_id")
+  name                String
+  age                 Int
+  grade               Int
+  schoolId            String?         @map("school_id")
+  assignedTeacherId   String?         @map("assigned_teacher_id")
+  assignedTherapistId String?         @map("assigned_therapist_id")
+  languagePreference  String          @default("en") @map("language_preference")
+  createdAt           DateTime        @default(now()) @map("created_at")
+  updatedAt           DateTime        @updatedAt @map("updated_at")
+  screeningStatus     ScreeningStatus @default(pending) @map("screening_status")
+  dyslexiaRisk        Decimal?        @map("dyslexia_risk") @db.Decimal(5, 2)
+  adhdRisk            Decimal?        @map("adhd_risk") @db.Decimal(5, 2)
+  asdRisk             Decimal?        @map("asd_risk") @db.Decimal(5, 2)
+  screeningConfidence Decimal?        @map("screening_confidence") @db.Decimal(3, 2)
+  assessedAt          DateTime?       @map("assessed_at")
+
+  assignedTeacher   User?           @relation("TeacherStudents", fields: [assignedTeacherId], references: [id])
+  assignedTherapist User?           @relation("TherapistStudents", fields: [assignedTherapistId], references: [id])
+  studentParents    StudentParent[]
+  assessments       Assessment[]
+  cognitiveLoadEvents CognitiveLoadEvent[]
+  attentionPatterns AttentionPattern[]
+  lstmPredictions   LstmPrediction[]
+
+  @@index([assignedTeacherId])
+  @@index([assignedTherapistId])
+  @@index([screeningStatus])
+  @@map("students")
+}
+
+ 
+model StudentParent {
+  studentId    String @map("student_id")
+  parentId     String @map("parent_id")
+  relationship String?  
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  parent  User    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, parentId])
+  @@index([studentId])
+  @@index([parentId])
+  @@map("student_parents")
+}
+
+ 
+enum AssessmentStatus {
+  in_progress
+  completed
+  reviewed
+}
+
+ 
+model Assessment {
+  id              String           @id @default(uuid()) @map("assessment_id")
+  studentId       String           @map("student_id")
+  student         Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  language        String           @default("en")
+  status          AssessmentStatus @default(in_progress)
+  startedAt       DateTime         @default(now()) @map("started_at")
+  completedAt     DateTime?        @map("completed_at")
+  durationSeconds Int?             @map("duration_seconds")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  games       AssessmentGame[]
+  predictions MlPrediction[]
+
+  @@index([studentId])
+  @@index([status])
+  @@map("assessments")
+}
+
+ 
+model AssessmentGame {
+  id              String     @id @default(uuid()) @map("game_id")
+  assessmentId    String     @map("assessment_id")
+  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  gameNumber      Int        @map("game_number")  
+  gameType        String     @map("game_type")  
+  eyeTrackingData Json?      @map("eye_tracking_data")
+  speechAudioUrl  String?    @map("speech_audio_url")
+  speechTranscription String? @map("speech_transcription")
+  speechMfccFeatures Json?   @map("speech_mfcc_features")
+  handwritingImageUrl String? @map("handwriting_image_url")
+  handwritingStrokes  Json?  @map("handwriting_strokes")
+  responseData    Json?      @map("response_data")
+  startedAt       DateTime   @default(now()) @map("started_at")
+  completedAt     DateTime?  @map("completed_at")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  @@unique([assessmentId, gameNumber])
+  @@index([assessmentId])
+  @@map("assessment_games")
+}
+
+ 
+model MlPrediction {
+  id                       String     @id @default(uuid()) @map("prediction_id")
+  assessmentId             String     @map("assessment_id")
+  assessment               Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId                String     @map("student_id")
+  predictionType           String     @map("prediction_type")  
+  dyslexiaRisk             Decimal?   @map("dyslexia_risk") @db.Decimal(5, 2)
+  adhdRisk                 Decimal?   @map("adhd_risk") @db.Decimal(5, 2)
+  asdRisk                  Decimal?   @map("asd_risk") @db.Decimal(5, 2)
+  confidence               Decimal?   @db.Decimal(3, 2)
+  modelVersion             String?    @map("model_version")
+  scriptSpecificIndicators Json?      @map("script_specific_indicators")
+  details                  Json?      @map("details")
+  createdAt                DateTime   @default(now()) @map("created_at")
+
+  @@index([assessmentId])
+  @@index([studentId])
+  @@map("ml_predictions")
+}
+
+ 
+model CognitiveLoadEvent {
+  id                    String   @id @default(uuid()) @map("event_id")
+  studentId             String   @map("student_id")
+  student               Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  sessionId             String   @map("session_id")
+  detectedAt            DateTime @default(now()) @map("detected_at")
+  taskType              String   @map("task_type")
+  taskId                String?  @map("task_id")
+  overloadDetected      Boolean  @default(false) @map("overload_detected")
+  fixationTimeAvgMs     Int?     @map("fixation_time_avg_ms")
+  consecutiveErrors     Int?     @map("consecutive_errors")
+  responsePauseMs       Int?     @map("response_pause_ms")
+  backspaceCount        Int?     @map("backspace_count")
+  mouseHoverHesitationMs Int?    @map("mouse_hover_hesitation_ms")
+  overloadSeverity      String?  @map("overload_severity")
+  interventionTriggered String?  @map("intervention_triggered")
+  studentResponse       String?  @map("student_response")
+  resolutionTimeSeconds Int?     @map("resolution_time_seconds")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@index([studentId])
+  @@index([sessionId])
+  @@index([detectedAt])
+  @@map("cognitive_load_events")
+}
+
+ 
+model AttentionPattern {
+  id                      String   @id @default(uuid()) @map("pattern_id")
+  studentId               String   @map("student_id")
+  student                 Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  date                    DateTime  
+  hourlyAttentionScores   Json     @map("hourly_attention_scores")  
+  taskSpecificAttention   Json?    @map("task_specific_attention")
+  attentionDecayRate      Decimal? @map("attention_decay_rate") @db.Decimal(5, 2)
+  optimalBreakIntervalMin Int?     @map("optimal_break_interval_minutes")
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  @@unique([studentId, date])
+  @@index([studentId])
+  @@index([date])
+  @@map("attention_patterns")
+}
+
+ 
+model LstmPrediction {
+  id                    String   @id @default(uuid()) @map("prediction_id")
+  studentId             String   @map("student_id")
+  student                 Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  generatedAt           DateTime @default(now()) @map("generated_at")
+  predictionHorizonHours Int      @map("prediction_horizon_hours")  
+  predictions           Json     @map("predictions")  
+  modelVersion          String?  @map("model_version")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@index([studentId])
+  @@index([generatedAt])
+  @@map("lstm_predictions")
+}
+

@@ -1,0 +1,59 @@
+/* MindMap AI Design System */
+:root {
+  /* Brand Colors - Premium Upgrade */
+  --primary: #6366f1;
+  /* Indigo 500 */
+  --primary-hover: #4f46e5;
+  /* Indigo 600 */
+  --secondary: #10b981;
+  /* Emerald 500 */
+  --secondary-hover: #059669;
+  /* Emerald 600 */
+  --accent: #f43f5e;
+  /* Rose 500 */
+  --danger: #ef4444;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --gradient-secondary: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  --gradient-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%);
+  --gradient-body: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+
+  /* Neutral Colors */
+  --bg-body: #f8fafc;
+  --bg-surface: rgba(255, 255, 255, 0.8);
+  /* Semi-transparent for glassmorphism */
+  --text-main: #1e293b;
+  /* Slate 800 */
+  --text-muted: #64748b;
+  /* Slate 500 */
+  --border-light: rgba(226, 232, 240, 0.8);
+
+  /* Shadows - Soft & Deep */
+  --shadow-sm: 0 2px 4px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 8px 24px -4px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 20px 48px -12px rgb(0 0 0 / 0.12);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+
+  /* Typography */
+  --font-sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Global Settings */
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--text-main);
+  background: var(--gradient-body);
+  /* Gradient Background */
+  background-attachment: fixed;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
