@@ -77,6 +77,7 @@ A background "watchdog" that runs during all learning tasks:
 - Make the UI children friendly
 - Mobile app
 - Growth checker of child
+- An AI buddy (Chatbot) for children
 
 ## Installation & Setup
     
