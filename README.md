@@ -93,17 +93,11 @@ Create a PostgreSQL database named `saksham_saathi_db`.
 cd backend
 npm install
 
-# Configure Environment
-# Create a .env file based on .env.example
-# Ensure DATABASE_URL="postgresql://user:password@localhost:5432/saksham_saathi_db"
-
-# Database Migration
 npx prisma generate
 npx prisma db push
 
 # Start Server
 npm run dev
-# Server runs on http://localhost:3000
 ```
 
 ### 3. ML Service Setup
