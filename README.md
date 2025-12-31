@@ -78,6 +78,9 @@ A background "watchdog" that runs during all learning tasks:
 - Mobile app
 - Growth checker of child
 - An AI buddy (Chatbot) for children
+- RBAC & Security
+- Performance optimization
+- Deployment
 
 ## Installation & Setup
     
