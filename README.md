@@ -43,7 +43,8 @@ A background "watchdog" that runs during all learning tasks:
 *   **Therapist**: Sets clinical parameters and intervention plans.
 *   **Teacher**: Receives actionable alerts and daily "Focus Forecasts".
 *   **Parent**: Gets simplified weekly reports and home activity suggestions.
-
+## System Architecture
+![Image](https://github.com/user-attachments/assets/97cd1d99-9275-4f5c-a46f-876c6084a107)
 ### 5. Offline-First Architecture
 *   **Local-First ML**: Models run in the browser (TF.js) or local Python service.
 *   **Sync Queue**: Data is stored in IndexedDB/Postgres and syncs to the cloud only when connection is available.
