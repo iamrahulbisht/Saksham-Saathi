@@ -1,0 +1,288 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model School {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  district  String
+  state     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+
+  @@index([state])
+}
+
+model User {
+  id              String          @id @default(uuid())
+  email           String          @unique
+  password        String
+  fullName        String?
+  role            Role
+  schoolId        String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  notifications   Notification[]
+  parentReports   ParentReport[]
+  studentsTaught  Student[]       @relation("TeacherStudents")
+  studentsTreated Student[]       @relation("TherapistStudents")
+  parentOf        StudentParent[]
+  syncQueueItems  SyncQueue[]
+  teacherLogs     TeacherLog[]
+  therapistNotes  TherapistNote[]
+  school          School?         @relation(fields: [schoolId], references: [id])
+
+  @@index([email])
+  @@index([schoolId])
+}
+
+model Student {
+  id                  String               @id @default(uuid())
+  name                String
+  age                 Int
+  grade               String
+  teacherId           String?
+  therapistId         String?
+  screeningStatus     String               @default("pending")
+  screeningRisks      Json?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  assessments         Assessment[]
+  attentionPatterns   AttentionPattern[]
+  cognitiveLoadEvents CognitiveLoadEvent[]
+  interventions       Intervention[]
+  lstmPredictions     LSTMPrediction[]
+  parentReports       ParentReport[]
+  teacher             User?                @relation("TeacherStudents", fields: [teacherId], references: [id])
+  therapist           User?                @relation("TherapistStudents", fields: [therapistId], references: [id])
+  parents             StudentParent[]
+  teacherLogs         TeacherLog[]
+  therapistNotes      TherapistNote[]
+
+  @@index([teacherId])
+  @@index([therapistId])
+}
+
+model StudentParent {
+  studentId String
+  parentId  String
+  parent    User    @relation(fields: [parentId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id])
+
+  @@id([studentId, parentId])
+}
+
+model Assessment {
+  id          String           @id @default(uuid())
+  studentId   String
+  language    String
+  status      AssessmentStatus @default(IN_PROGRESS)
+  duration    Int?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  currentGame Int              @default(1)
+  student     Student          @relation(fields: [studentId], references: [id])
+  games       AssessmentGame[]
+  prediction  MLPrediction?
+
+  @@index([studentId])
+  @@index([status])
+}
+
+model AssessmentGame {
+  id                  String     @id @default(uuid())
+  assessmentId        String
+  gameNumber          Int
+  eyeTrackingData     Json?
+  speechAudioUrl      String?
+  handwritingStrokes  Json?
+  scores              Json?
+  handwritingImageUrl String?
+  assessment          Assessment @relation(fields: [assessmentId], references: [id])
+
+  @@index([assessmentId])
+}
+
+model MLPrediction {
+  id                       String     @id @default(uuid())
+  assessmentId             String     @unique
+  dyslexiaRisk             Float
+  adhdRisk                 Float
+  asdRisk                  Float
+  confidence               Float
+  scriptSpecificIndicators Json?
+  createdAt                DateTime   @default(now())
+  assessment               Assessment @relation(fields: [assessmentId], references: [id])
+}
+
+model CognitiveLoadEvent {
+  id                String   @id @default(uuid())
+  studentId         String
+  sessionId         String
+  overloadDetected  Boolean
+  fixationTime      Float
+  consecutiveErrors Int
+  severity          Severity
+  timestamp         DateTime @default(now())
+  student           Student  @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+  @@index([timestamp])
+}
+
+model AttentionPattern {
+  id                    String   @id @default(uuid())
+  studentId             String
+  date                  DateTime @db.Date
+  hourlyAttentionScores Json
+  optimalBreakInterval  Int
+  student               Student  @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, date])
+}
+
+model LSTMPrediction {
+  id                     String   @id @default(uuid())
+  studentId              String
+  generatedAt            DateTime @default(now())
+  predictionHorizonHours Int
+  predictions            Json
+  student                Student  @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+}
+
+model TherapistNote {
+  id                       String       @id @default(uuid())
+  therapistId              String
+  studentId                String
+  clinicalObservations     String
+  recommendedInterventions Json
+  severity                 Severity
+  createdAt                DateTime     @default(now())
+  teacherLogs              TeacherLog[]
+  student                  Student      @relation(fields: [studentId], references: [id])
+  therapist                User         @relation(fields: [therapistId], references: [id])
+
+  @@index([studentId])
+}
+
+model TeacherLog {
+  id                      String        @id @default(uuid())
+  teacherId               String
+  studentId               String
+  therapistNoteId         String
+  interventionImplemented String
+  effectivenessRating     Int
+  createdAt               DateTime      @default(now())
+  student                 Student       @relation(fields: [studentId], references: [id])
+  teacher                 User          @relation(fields: [teacherId], references: [id])
+  therapistNote           TherapistNote @relation(fields: [therapistNoteId], references: [id])
+
+  @@index([studentId])
+}
+
+model ParentReport {
+  id                       String   @id @default(uuid())
+  parentId                 String
+  studentId                String
+  reportPeriodStart        DateTime
+  reportPeriodEnd          DateTime
+  progressSummary          String
+  smartActivitySuggestions Json
+  parentAcknowledged       Boolean  @default(false)
+  createdAt                DateTime @default(now())
+  parent                   User     @relation(fields: [parentId], references: [id])
+  student                  Student  @relation(fields: [studentId], references: [id])
+}
+
+model Intervention {
+  id                 String    @id @default(uuid())
+  studentId          String
+  interventionType   String
+  startedAt          DateTime  @default(now())
+  endedAt            DateTime?
+  effectivenessScore Float?
+  isActive           Boolean   @default(true)
+  student            Student   @relation(fields: [studentId], references: [id])
+
+  @@index([studentId])
+}
+
+model SyncQueue {
+  id         String     @id @default(uuid())
+  deviceId   String
+  userId     String?
+  dataType   String
+  payload    Json
+  syncStatus SyncStatus @default(PENDING)
+  retryCount Int        @default(0)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  user       User?      @relation(fields: [userId], references: [id])
+
+  @@index([syncStatus])
+  @@index([deviceId])
+}
+
+model Notification {
+  id                String   @id @default(uuid())
+  recipientUserId   String
+  notificationType  String
+  title             String
+  message           String
+  priority          String
+  relatedResourceId String?
+  isRead            Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  recipient         User     @relation(fields: [recipientUserId], references: [id])
+
+  @@index([recipientUserId])
+}
+
+model MLModelVersion {
+  id                 String   @id @default(uuid())
+  modelName          String
+  version            String
+  trainingDate       DateTime
+  accuracyPercentage Float
+  isActive           Boolean  @default(false)
+  filePath           String?
+
+  @@unique([modelName, version])
+  @@index([isActive])
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  THERAPIST
+  PARENT
+  ADMIN
+}
+
+enum AssessmentStatus {
+  IN_PROGRESS
+  COMPLETED
+  REVIEWED
+}
+
+enum Severity {
+  MILD
+  MODERATE
+  SEVERE
+}
+
+enum SyncStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
