@@ -3,6 +3,9 @@ Saksham Saathi is a regionally adapted, tech enabled learning platform designed 
 
 ## Demo Video
 
+https://drive.google.com/file/d/1EUvt2LGI3gVnNSiL4LalIx6ZhqW41qYw/view?usp=sharing
+
+
 ## Problem
 - 22.66 Lakhs children in India with intellectual disabilities or learning difficulties remain unnoticed by parents and teachers.
 - Most diagnoses occur after Grade 3, losing the critical early neuroplasticity window for effective intervention.
