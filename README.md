@@ -104,7 +104,12 @@ Truly inclusive with script-aware AI:
                 └─────────────────┘
 ```
 
+--
 ![Image](https://github.com/user-attachments/assets/865493c7-a14c-41db-b932-65a08a66f693)
+--
+![Image](https://github.com/user-attachments/assets/b6d0eab9-09fa-4755-875c-115157996db5)
+--
+
 
 ## Quick Start
 ### Prerequisites
