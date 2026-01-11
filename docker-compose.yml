@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: saksham-postgres
+    environment:
+      POSTGRES_USER: saksham_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: saksham_saathi_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U saksham_admin" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Node.js Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: saksham-backend
+    environment:
+      DATABASE_URL: postgresql://saksham_admin:${POSTGRES_PASSWORD}@postgres:5432/saksham_saathi_db
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ML_SERVICE_URL: http://ml-service:8000
+      NODE_ENV: production
+      PORT: 3000
+      SOCKET_CORS_ORIGIN: http://localhost # Allow frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ml-service:
+        condition: service_started
+    volumes:
+      # Mount prisma schema for migrations if needed, though baked into image is better for prod
+      - ./backend/prisma:/app/prisma
+    command: >
+      sh -c "npx prisma migrate deploy && npm run start"
+
+  # Python ML Service
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: saksham-ml-service
+    environment:
+      ML_SERVICE_PORT: 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist models
+      - ./ml-service/app/ml_models:/app/app/ml_models
+
+  # React Frontend (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: saksham-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
