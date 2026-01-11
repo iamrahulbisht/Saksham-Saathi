@@ -104,6 +104,8 @@ Truly inclusive with script-aware AI:
                 └─────────────────┘
 ```
 
+![Image](https://github.com/user-attachments/assets/865493c7-a14c-41db-b932-65a08a66f693)
+
 ## Quick Start
 ### Prerequisites
 1.  **Node.js** v18+
