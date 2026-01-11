@@ -3,6 +3,10 @@ Saksham Saathi is a regionally adapted, tech enabled learning platform designed 
 
 ## Demo Video
 
+### Video 1
+https://github.com/user-attachments/assets/7bc438b2-42ff-4a3c-9580-1b5a6f96704a
+
+### Video 2
 https://drive.google.com/file/d/1EUvt2LGI3gVnNSiL4LalIx6ZhqW41qYw/view?usp=sharing
 
 
